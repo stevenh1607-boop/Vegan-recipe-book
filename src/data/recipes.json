@@ -1,0 +1,52 @@
+[
+  {
+    "id": "1",
+    "name": "Coconut & Tomato Braised Chickpeas",
+    "description": "A warming winter braise with crispy tofu, deeply spiced and finished with fresh spinach and lemon.",
+    "season": ["winter", "autumn"],
+    "prepTime": 15,
+    "cookTime": 30,
+    "serves": 2,
+    "tags": ["one-pot", "chickpeas", "tofu", "curry"],
+    "ingredients": [
+      { "name": "firm tofu", "amount": 300, "unit": "g" },
+      { "name": "chickpeas", "amount": 400, "unit": "g" },
+      { "name": "diced tomatoes", "amount": 400, "unit": "g" },
+      { "name": "coconut milk", "amount": 400, "unit": "ml" },
+      { "name": "tomato paste", "amount": 2, "unit": "tbsp" },
+      { "name": "garlic", "amount": 4, "unit": "cloves" },
+      { "name": "fresh ginger", "amount": 2, "unit": "tsp" },
+      { "name": "cumin", "amount": 1, "unit": "tsp" },
+      { "name": "smoked paprika", "amount": 1, "unit": "tsp" },
+      { "name": "chilli flakes", "amount": 0.5, "unit": "tsp" },
+      { "name": "fresh spinach", "amount": 100, "unit": "g" },
+      { "name": "capsicum", "amount": 1, "unit": "whole" },
+      { "name": "zucchini", "amount": 1, "unit": "whole" },
+      { "name": "basmati rice", "amount": 200, "unit": "g" },
+      { "name": "lemon", "amount": 1, "unit": "whole" },
+      { "name": "olive oil", "amount": 2, "unit": "tbsp" }
+    ],
+    "method": [
+      "Press tofu between paper towels for 10 minutes, then cut into 2cm cubes.",
+      "Heat olive oil in a large pan over high heat. Fry tofu until golden and crispy on all sides, about 8 minutes. Remove and set aside.",
+      "In the same pan, sauté diced capsicum and zucchini for 3 minutes. Add garlic, ginger, cumin, smoked paprika and chilli flakes. Cook 1 minute until fragrant.",
+      "Add tomato paste and stir through. Pour in diced tomatoes and coconut milk. Bring to a simmer.",
+      "Add drained chickpeas. Simmer uncovered for 15 minutes until sauce thickens.",
+      "Meanwhile, cook basmati rice per packet instructions.",
+      "Stir spinach through the braise until just wilted. Return crispy tofu to the pan.",
+      "Finish with a squeeze of lemon, season to taste. Serve over rice."
+    ],
+    "tips": [
+      "Add more chilli if you like heat — this is mild as written.",
+      "Crispy tofu is key — don't skip the pressing step.",
+      "Leftovers taste even better the next day."
+    ],
+    "nutrition": null,
+    "image": null,
+    "rating": 5,
+    "comments": "Really good — add more chilli next time. Perfect winter meal.",
+    "dateAdded": "2026-06-29",
+    "dateCooked": "2026-06-29",
+    "source": "claude-suggestion"
+  }
+]
