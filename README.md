@@ -1,16 +1,25 @@
-# React + Vite
+# 🌱 Vegan Recipe Book
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A personal vegan recipe book for 2 adults, built with React and optimised for iPad.
 
-Currently, two official plugins are available:
+## Features
+- 🔍 Search and filter by ingredient, season, and tags
+- 📷 Recipe scanner (camera, image upload, or URL)
+- 🥗 Auto nutrition calculation via Edamam API
+- ⭐ Personal ratings and comments
+- 🤖 AI-generated recipe images
+- 📱 iPad-first responsive design
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Tech Stack
+- React + Vite
+- Tailwind CSS
+- Edamam Nutrition API
+- Cloudinary (image storage)
+- Claude AI (recipe scanning + image generation)
+- GitHub Pages (hosting)
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Local Development
+1. Clone the repo
+2. Copy `.env.example` to `.env` and fill in your API keys
+3. `npm install`
+4. `npm run dev`
