@@ -2,10 +2,10 @@ import { useState } from 'react'
 import RecipeGrid from './components/RecipeGrid'
 import RecipeDetail from './components/RecipeDetail'
 import RecipeScanner from './components/RecipeScanner'
-import recipesData from './data/recipes.json'
+import { useLocalRecipes } from './hooks/useLocalRecipes'
 
 export default function App() {
-  const [recipes, setRecipes] = useState(recipesData)
+  const [recipes, setRecipes] = useLocalRecipes()
   const [selectedRecipe, setSelectedRecipe] = useState(null)
   const [view, setView] = useState('home') // home | detail | scanner
 

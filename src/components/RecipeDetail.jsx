@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react'
 import { calculateNutrition } from '../hooks/useNutrition'
 
+function scaleAmount(amount, servings, baseServes) {
+  const scaled = amount * (servings / baseServes)
+  if (scaled === 0) return 0
+  // Round to nearest quarter for small amounts, 1dp for larger
+  if (scaled < 1) return Math.round(scaled * 4) / 4
+  return Math.round(scaled * 10) / 10
+}
+
 const SEASON_EMOJI = {
   summer: '☀️', autumn: '🍂', winter: '❄️', spring: '🌸'
 }
@@ -12,6 +20,7 @@ export default function RecipeDetail({ recipe, onBack, onUpdateRecipe }) {
   const [editingComments, setEditingComments] = useState(false)
   const [checkedSteps, setCheckedSteps] = useState([])
   const [checkedIngredients, setCheckedIngredients] = useState([])
+  const [servings, setServings] = useState(recipe.serves)
   const [nutrition, setNutrition] = useState(recipe.nutrition || null)
   const [loadingNutrition, setLoadingNutrition] = useState(false)
 
@@ -75,10 +84,22 @@ export default function RecipeDetail({ recipe, onBack, onUpdateRecipe }) {
         <p className="text-stone-500 mb-4">{recipe.description}</p>
 
         {/* Stats row */}
-        <div className="flex gap-4 text-sm text-stone-500 bg-stone-100 rounded-xl px-4 py-3">
+        <div className="flex flex-wrap gap-4 text-sm text-stone-500 bg-stone-100 rounded-xl px-4 py-3 items-center">
           <span>⏱ Prep {recipe.prepTime} min</span>
           <span>🍳 Cook {recipe.cookTime} min</span>
-          <span>👥 Serves {recipe.serves}</span>
+          <div className="flex items-center gap-2 ml-auto">
+            <span>👥</span>
+            <button
+              onClick={() => setServings(s => Math.max(1, s - 1))}
+              className="w-7 h-7 rounded-full bg-white border border-stone-300 text-stone-600 flex items-center justify-center hover:bg-stone-200 transition-colors font-bold"
+            >−</button>
+            <span className="font-semibold text-stone-700 w-6 text-center">{servings}</span>
+            <button
+              onClick={() => setServings(s => s + 1)}
+              className="w-7 h-7 rounded-full bg-white border border-stone-300 text-stone-600 flex items-center justify-center hover:bg-stone-200 transition-colors font-bold"
+            >+</button>
+            <span>serves</span>
+          </div>
         </div>
       </div>
 
@@ -143,7 +164,7 @@ export default function RecipeDetail({ recipe, onBack, onUpdateRecipe }) {
                   <span className="text-white text-xs">✓</span>
                 )}
               </span>
-              <span className="font-medium">{ing.amount} {ing.unit}</span>
+              <span className="font-medium">{scaleAmount(ing.amount, servings, recipe.serves)} {ing.unit}</span>
               <span>{ing.name}</span>
             </li>
           ))}
