@@ -1,6 +1,6 @@
 # 🌱 Vegan Recipe Book
 
-A personal vegan recipe book for 2 adults, built with React and optimised for iPad.
+A personal vegan recipe book for 2 adults, built with React and optimised for iPad. https://stevenh1607-boop.github.io/Vegan-recipe-book/
 
 ## Features
 - 🔍 Search and filter by ingredient, season, and tags
