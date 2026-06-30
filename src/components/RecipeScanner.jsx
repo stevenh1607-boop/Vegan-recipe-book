@@ -442,26 +442,23 @@ export default function RecipeScanner({ onAddRecipe, onBack }) {
             {/* Two-option layout */}
             <div className="grid grid-cols-2 gap-3">
 
-              {/* Option A: Camera */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
+              {/* Option A: Camera — label wraps the input so iOS Safari allows the tap */}
+              <label
+                htmlFor="recipe-photo-input"
                 className="flex flex-col items-center justify-center gap-3 bg-white border-2 border-dashed border-green-300 rounded-2xl p-6 text-center hover:border-green-500 hover:bg-green-50 transition-colors cursor-pointer"
               >
                 <span className="text-4xl">📷</span>
                 <span className="text-sm font-semibold text-gray-700">Take a photo</span>
                 <span className="text-xs text-gray-400">or pick from library</span>
-              </button>
-
-              {/* Hidden file input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleFileChange}
-                className="hidden"
-                aria-label="Camera capture"
-              />
+                <input
+                  id="recipe-photo-input"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
 
               {/* Option B: URL — shown as a non-interactive placeholder tile */}
               <div className="flex flex-col items-center justify-center gap-3 bg-white border-2 border-dashed border-blue-200 rounded-2xl p-6 text-center">
