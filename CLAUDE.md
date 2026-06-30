@@ -20,7 +20,7 @@ src/
     RecipeGrid.jsx         # Home page: search + season filter + card grid
     RecipeCard.jsx         # Card tile with image, tags, rating, season emoji
     RecipeDetail.jsx       # Full recipe page: checklist, macros, rating, notes
-    RecipeScanner.jsx      # Add recipe: camera / URL / manual
+    RecipeScanner.jsx      # Add recipe: camera photo or URL → Claude Vision parse
   hooks/
     useNutrition.js        # USDA macro calculator
   services/
@@ -52,6 +52,14 @@ Every recipe in `recipes.json` must match this interface exactly:
 }
 ```
 
+**Note:** Claude's raw parse output rarely matches this shape exactly (e.g. it may
+return `season` as a single string, or `{item, amount, unit}` instead of
+`{name, amount, unit}`). Any component that accepts AI-parsed input (like
+`RecipeScanner`) must run a `normalizeRecipe()` step that maps the raw JSON
+onto this exact interface — defaulting missing fields, coercing types, and
+wrapping `season` in an array — before it ever reaches `recipes.json` or app
+state. See `RecipeScanner.jsx` for the reference implementation.
+
 ## Environment variables (all in `.env`, gitignored)
 ```
 VITE_USDA_API_KEY=
@@ -69,6 +77,7 @@ Access via `import.meta.env.VITE_*`. Never commit `.env`.
 - **Nutrition is lazy** — calculated on first `RecipeDetail` view via USDA, then cached back into recipe state via `onUpdateRecipe`
 - **No router library** — view state is `useState` in App.jsx: `'home' | 'detail' | 'scanner'`
 - **IDs** — use `crypto.randomUUID()` for new recipe IDs
+- **AI-parsed input is untrusted** — always normalize/validate Claude's JSON output against the recipe shape before writing it to state (see `normalizeRecipe()` in `RecipeScanner.jsx`)
 
 ## Cloudinary upload (unsigned)
 ```js
@@ -90,23 +99,36 @@ const res = await fetch('https://api.anthropic.com/v1/messages', {
     'content-type': 'application/json',
   },
   body: JSON.stringify({
-    model: 'claude-haiku-4-5-20251001',
+    model: 'claude-opus-4-6',
     max_tokens: 2048,
     messages: [{ role: 'user', content: '...' }],
   }),
 })
 ```
+**Model choice:** use `claude-opus-4-6` for anything involving image/vision input
+(e.g. `RecipeScanner`'s photo parsing) — it's meaningfully better than Haiku at
+handwriting, low-light photos, and multi-column cookbook layouts. A cheaper/faster
+model is fine for pure-text tasks if one is ever needed, but vision parsing should
+stay on Opus.
+
 **Note:** Direct browser API calls are fine for local dev but must move to a server function before deploying publicly.
+
+**Parsing robustness (`RecipeScanner.jsx` pattern):**
+- Strip accidental ` ```json ` markdown fences before `JSON.parse`
+- Run output through `normalizeRecipe()` to enforce the recipe shape above
+- On `JSON.parse` failure, surface Claude's raw text output in a debug panel
+  instead of failing silently — never discard unparseable output
 
 ## What's built ✅
 - Recipe grid with search + season filter
 - Recipe card with image, tags, season emoji, rating
 - Recipe detail with tap-to-check ingredients/steps, USDA nutrition, star rating, editable notes
 - USDA nutrition hook (parallel lookups, cached on first view)
+- RecipeScanner — camera photo or URL input, Cloudinary upload, Claude Vision (Opus 4.6) parsing, `normalizeRecipe()` schema enforcement, parse-error debug panel, preview-and-confirm flow
 
 ## What's next 🔲
-- RecipeScanner: camera capture → Cloudinary → Claude vision parse
 - localStorage persistence (recipes survive refresh)
 - GitHub Pages deploy (`base: '/vegan-recipe-book/'` already set in vite.config.js)
 - Serve-size scaling on RecipeDetail
 - Share/export recipe as image or PDF
+- RecipeScanner URL path: currently asks Claude to fetch+parse a page URL directly via text prompt (no live browsing in raw API calls) — if accuracy is poor, fetch the page HTML separately (e.g. via a CORS proxy) and pass extracted text to Claude instead of just the URL

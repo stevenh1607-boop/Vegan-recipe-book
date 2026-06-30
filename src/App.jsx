@@ -2,10 +2,10 @@ import { useState } from 'react'
 import RecipeGrid from './components/RecipeGrid'
 import RecipeDetail from './components/RecipeDetail'
 import RecipeScanner from './components/RecipeScanner'
-import { useLocalRecipes } from './hooks/useLocalRecipes'
+import { useSupabaseRecipes } from './hooks/useSupabaseRecipes'
 
 export default function App() {
-  const [recipes, setRecipes] = useLocalRecipes()
+  const { recipes, addRecipe, updateRecipe, loading } = useSupabaseRecipes()
   const [selectedRecipe, setSelectedRecipe] = useState(null)
   const [view, setView] = useState('home') // home | detail | scanner
 
@@ -20,7 +20,7 @@ export default function App() {
   }
 
   const handleAddRecipe = (newRecipe) => {
-    setRecipes(prev => [newRecipe, ...prev])
+    addRecipe(newRecipe)
     setView('home')
   }
 
@@ -45,28 +45,31 @@ export default function App() {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-6">
-        {view === 'home' && (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-32 text-stone-400">
+            <div className="w-10 h-10 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-4" />
+            <p className="text-sm">Loading your recipes…</p>
+          </div>
+        ) : view === 'home' ? (
           <RecipeGrid
             recipes={recipes}
             onSelectRecipe={handleSelectRecipe}
           />
-        )}
-        {view === 'detail' && selectedRecipe && (
+        ) : view === 'detail' && selectedRecipe ? (
           <RecipeDetail
             recipe={selectedRecipe}
             onBack={handleBack}
             onUpdateRecipe={(updated) => {
-              setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r))
+              updateRecipe(updated)
               setSelectedRecipe(updated)
             }}
           />
-        )}
-        {view === 'scanner' && (
+        ) : view === 'scanner' ? (
           <RecipeScanner
             onAddRecipe={handleAddRecipe}
             onBack={handleBack}
           />
-        )}
+        ) : null}
       </main>
     </div>
   )
