@@ -64,7 +64,7 @@ export default function App() {
         {view === 'scanner' && (
           <RecipeScanner
             onAddRecipe={handleAddRecipe}
-            onCancel={handleBack}
+            onBack={handleBack}
           />
         )}
       </main>
