@@ -7,5 +7,5 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  base: '/vegan-recipe-book/',
+  base: '/Vegan-recipe-book/',
 })
