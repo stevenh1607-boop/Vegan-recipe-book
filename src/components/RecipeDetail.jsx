@@ -13,6 +13,10 @@ function scaleAmount(amount, servings, baseServes) {
 const SEASON_EMOJI = {
   summer: '☀️', autumn: '🍂', winter: '❄️', spring: '🌸'
 }
+function nutritionLooksValid(n) {
+  if (!n) return false
+  return Object.values(n).some(v => typeof v === 'number' && v > 0)
+}
 
 export default function RecipeDetail({ recipe, onBack, onUpdateRecipe }) {
   const [rating, setRating] = useState(recipe.rating || 0)
@@ -43,8 +47,8 @@ export default function RecipeDetail({ recipe, onBack, onUpdateRecipe }) {
     }
   }
 
-  useEffect(() => {
-    if (!recipe.nutrition && recipe.ingredients?.length > 0) {
+ useEffect(() => {
+    if (!nutritionLooksValid(recipe.nutrition) && recipe.ingredients?.length > 0) {
       setLoadingNutrition(true)
       calculateNutrition(recipe.ingredients, recipe.serves)
         .then(data => {
