@@ -93,6 +93,22 @@ function ErrorBanner({ message, onDismiss }) {
   );
 }
 
+function ThumbnailStrip({ urls, altPrefix }) {
+  if (!urls?.length) return null;
+  return (
+    <div className="flex gap-3 overflow-x-auto mb-4 pb-1">
+      {urls.map((url, i) => (
+        <img
+          key={url + i}
+          src={url}
+          alt={`${altPrefix} ${i + 1}`}
+          className="h-48 w-48 shrink-0 object-cover rounded-xl"
+        />
+      ))}
+    </div>
+  );
+}
+
 function RecipePreviewCard({ recipe }) {
   return (
     <div className="bg-green-50 border border-green-200 rounded-2xl p-5 space-y-3">
@@ -170,8 +186,8 @@ export default function RecipeScanner({ onAddRecipe, onBack }) {
   const fileInputRef = useRef(null);
 
   // Upload state
-  const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
 
   // Parse state
   const [parsedRecipe, setParsedRecipe] = useState(null);
@@ -185,8 +201,8 @@ export default function RecipeScanner({ onAddRecipe, onBack }) {
 
   function resetToIdle() {
     setStatus("idle");
-    setUploadedImageUrl(null);
-    setImagePreviewUrl(null);
+    setUploadedImageUrls([]);
+    setImagePreviewUrls([]);
     setParsedRecipe(null);
     setRawParseText(null);
     setError(null);
@@ -201,31 +217,36 @@ export default function RecipeScanner({ onAddRecipe, onBack }) {
 
   // ── Step 2: Cloudinary Upload ─────────────────────────────────────────────
 
-  async function uploadToCloudinary(file) {
-    setStatus("uploading");
-    setError(null);
-
-    // Local preview while uploading
-    setImagePreviewUrl(URL.createObjectURL(file));
-
+  async function uploadOneToCloudinary(file) {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", UPLOAD_PRESET);
 
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      { method: "POST", body: formData }
+    );
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData?.error?.message || `Upload failed (${res.status})`);
+    }
+
+    const data = await res.json();
+    return data.secure_url;
+  }
+
+  async function uploadAllToCloudinary(files) {
+    setStatus("uploading");
+    setError(null);
+
+    // Local previews while uploading
+    setImagePreviewUrls(files.map((file) => URL.createObjectURL(file)));
+
     try {
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-        { method: "POST", body: formData }
-      );
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData?.error?.message || `Upload failed (${res.status})`);
-      }
-
-      const data = await res.json();
-      setUploadedImageUrl(data.secure_url);
-      return data.secure_url;
+      const urls = await Promise.all(files.map((file) => uploadOneToCloudinary(file)));
+      setUploadedImageUrls(urls);
+      return urls;
     } catch (err) {
       handleError(`Image upload failed: ${err.message}`);
       return null;
@@ -234,21 +255,24 @@ export default function RecipeScanner({ onAddRecipe, onBack }) {
 
   // ── Step 3: Claude Parse ──────────────────────────────────────────────────
 
-  async function parseWithClaude({ imageUrl, pageUrl }) {
+  async function parseWithClaude({ imageUrls, pageUrl }) {
     setStatus("parsing");
     setError(null);
 
-    const source = imageUrl ? "scanner" : "url";
+    const source = imageUrls?.length ? "scanner" : "url";
 
-    const userContent = imageUrl
+    const userContent = imageUrls?.length
       ? [
-          {
+          ...imageUrls.map((url) => ({
             type: "image",
-            source: { type: "url", url: imageUrl },
-          },
+            source: { type: "url", url },
+          })),
           {
             type: "text",
-            text: "Parse this recipe image and return the JSON as instructed.",
+            text:
+              imageUrls.length > 1
+                ? `These ${imageUrls.length} images are consecutive pages of the same recipe from a cookbook. Merge them into a single recipe and return the JSON as instructed.`
+                : "Parse this recipe image and return the JSON as instructed.",
           },
         ]
       : [
@@ -289,7 +313,7 @@ export default function RecipeScanner({ onAddRecipe, onBack }) {
         // Strip any accidental markdown fences just in case
         const clean = rawText.replace(/^```[a-z]*\n?/gm, "").replace(/```$/gm, "").trim();
         const raw = JSON.parse(clean);
-        const recipe = normalizeRecipe(raw, { imageUrl: imageUrl ?? null, source });
+        const recipe = normalizeRecipe(raw, { imageUrl: imageUrls?.[0] ?? null, source });
         setParsedRecipe(recipe);
         setStatus("preview");
       } catch {
@@ -303,12 +327,12 @@ export default function RecipeScanner({ onAddRecipe, onBack }) {
   // ── Event handlers ────────────────────────────────────────────────────────
 
   async function handleFileChange(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
 
-    const secureUrl = await uploadToCloudinary(file);
-    if (secureUrl) {
-      await parseWithClaude({ imageUrl: secureUrl });
+    const secureUrls = await uploadAllToCloudinary(files);
+    if (secureUrls) {
+      await parseWithClaude({ imageUrls: secureUrls });
     }
   }
 
@@ -359,26 +383,14 @@ export default function RecipeScanner({ onAddRecipe, onBack }) {
         {/* ── Loading states ── */}
         {status === "uploading" && (
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            {imagePreviewUrl && (
-              <img
-                src={imagePreviewUrl}
-                alt="Uploading preview"
-                className="w-full h-48 object-cover rounded-xl mb-4"
-              />
-            )}
+            <ThumbnailStrip urls={imagePreviewUrls} altPrefix="Uploading preview" />
             <Spinner label="Uploading image to Cloudinary…" />
           </div>
         )}
 
         {status === "parsing" && (
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            {imagePreviewUrl && (
-              <img
-                src={imagePreviewUrl}
-                alt="Uploaded"
-                className="w-full h-48 object-cover rounded-xl mb-4"
-              />
-            )}
+            <ThumbnailStrip urls={imagePreviewUrls} altPrefix="Uploaded" />
             <Spinner label="Claude is reading the recipe…" />
           </div>
         )}
@@ -407,13 +419,7 @@ export default function RecipeScanner({ onAddRecipe, onBack }) {
         {/* ── Preview & confirm ── */}
         {status === "preview" && parsedRecipe && (
           <div className="space-y-4">
-            {imagePreviewUrl && (
-              <img
-                src={imagePreviewUrl}
-                alt={parsedRecipe.name}
-                className="w-full h-52 object-cover rounded-2xl border border-gray-200"
-              />
-            )}
+            <ThumbnailStrip urls={imagePreviewUrls} altPrefix={parsedRecipe.name} />
             <RecipePreviewCard recipe={parsedRecipe} />
             <div className="flex gap-3">
               <button
@@ -455,6 +461,7 @@ export default function RecipeScanner({ onAddRecipe, onBack }) {
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleFileChange}
                   className="hidden"
                 />
